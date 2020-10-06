@@ -1,6 +1,8 @@
 import numpy as np
 import copy,math
 from sklearn.metrics import confusion_matrix,classification_report
+from sklearn.neighbors import KDTree
+from sklearn.neighbors import NearestNeighbors
 
 
 def get_counts(clf, x_train, y_train, x_test, y_test, test_df, biased_col, metric='aod'):
@@ -144,6 +146,21 @@ def calculate_F1(TP,FP,FN,TN):
 
 def calculate_accuracy(TP,FP,FN,TN):
     return round((TP + TN)/(TP + TN + FP + FN),2)
+
+def consistency_score(X, y, n_neighbors=5):
+        
+        num_samples = X.shape[0]
+        # y = y.values # Do it if it's not np array
+        # learn a KNN on the features
+        nbrs = NearestNeighbors(n_neighbors, algorithm='ball_tree').fit(X)
+        _, indices = nbrs.kneighbors(X)
+
+        # compute consistency score
+        consistency = 0.0
+        for i in range(num_samples):
+            consistency += np.abs(y[i] - np.mean(y[indices[i]]))
+        consistency = 1.0 - consistency/num_samples       
+        return consistency
 
 
 def measure_final_score(test_df, clf, X_train, y_train, X_test, y_test, biased_col, metric):
